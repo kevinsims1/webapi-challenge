@@ -1,5 +1,6 @@
 const express = require('express');
 const projectDB = require('../data/helpers/projectModel')
+const actionDB = require('../data/helpers/actionModel')
 
 const router = express.Router();
 
@@ -36,6 +37,17 @@ router.post('/', (req,res) => {
     })
 })
 
+router.post('/:id/action',validateProjectId, (req,res) => {
+    actionDB
+    .insert({...req.body, project_id: req.params.id})
+    .then(action => {     
+        res.status(200).json(action)
+    })
+    .catch(() => {
+        res.status(500).json({error: "Could not create Action"})
+    })
+})
+
 router.put('/:id', (req,res) => {
     projectDB
     .update(req.params.id, req.body)
@@ -58,6 +70,22 @@ router.delete('/:id', (req, res) => {
     })
     
 });
+
+function validateProjectId(req, res, Next) {
+    const id = req.params.id
+    projectDB
+    .get(id)
+    .then(project => {
+        if(project) {
+            Next()
+            }else {
+            res.status(404).json({error: "project_id Does not exist"})
+            }
+    })
+    .catch(() => {
+        res.status(500).json({error: "Error Retrieving The Project"})
+    })
+}
 
 
 module.exports = router;
